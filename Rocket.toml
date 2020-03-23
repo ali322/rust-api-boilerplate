@@ -1,0 +1,5 @@
+[global]
+port = 1234
+
+[global.databases]
+aid = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}
