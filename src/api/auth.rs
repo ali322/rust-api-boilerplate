@@ -1,51 +1,45 @@
-use crate::dao::model::*;
-use crate::dao::Conn;
-use diesel::insert_into;
-use diesel::prelude::*;
+use super::APIResult;
+use crate::dao::{model::*, Conn};
+use diesel::{insert_into, prelude::*};
 use rocket::request::Form;
-use rocket::response::status::BadRequest;
 use rocket_contrib::json::Json;
-use serde::Serialize;
+use serde_json::json;
+use std::collections::HashMap;
+use validator::Validate;
 
-#[derive(FromForm)]
+#[derive(FromForm, Validate)]
 pub struct RegisterForm {
   username: String,
   password: String,
+  #[validate(email)]
   email: String,
 }
 
-#[derive(Serialize)]
-pub struct AuthResult {
-  token: &'static str,
-  user: User,
-}
-
 #[post("/register", data = "<form>")]
-pub fn register(
-  form: Form<RegisterForm>,
-  conn: Conn,
-) -> Result<Json<AuthResult>, BadRequest<String>> {
-  use crate::dao::schema::users::dsl::*;
+pub fn register(form: Form<RegisterForm>, conn: Conn) -> APIResult {
+  use crate::dao::schema::users;
   use chrono::Local;
-  let ret = users.filter(username.eq(&form.username)).first::<User>(&*conn);
+  form
+    .validate()
+    .map_err(|e| response!(validate_error!(e), -2))?;
+  let ret = users::table
+    .filter(users::username.eq(&form.username))
+    .first::<User>(&*conn);
   if ret.is_ok() {
-    return Err(BadRequest(Some("use existed".to_string())));
+    return Err(response!("user existed", -2));
   }
   let now = Local::now().naive_local();
-  let ret = insert_into(users)
+  let user = insert_into(users::table)
     .values((
-      username.eq(&form.username),
-      password.eq(&form.password),
-      email.eq(&form.email),
-      last_logined_at.eq(now),
+      users::username.eq(&form.username),
+      users::password.eq(&form.password),
+      users::email.eq(&form.email),
+      users::last_logined_at.eq(now),
     ))
-    .get_result::<User>(&*conn);
-  if ret.is_err() {
-    return Err(BadRequest(ret.err().map(|e| e.to_string())));
-  }
+    .get_result::<User>(&*conn)
+    .map_err(|e| response!(e.to_string(), -1))?;
 
-  Ok(Json(AuthResult {
-    token: "test",
-    user: ret.unwrap(),
+  Ok(response!({
+    "token":"123", "user": user
   }))
 }

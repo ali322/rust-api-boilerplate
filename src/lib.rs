@@ -6,6 +6,9 @@ extern crate rocket;
 extern crate rocket_contrib;
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate validator_derive;
+extern crate validator;
 
 extern crate chrono;
 extern crate serde;
@@ -23,10 +26,11 @@ pub fn index() -> &'static str {
 impl App {
   pub fn new() -> rocket::Rocket{
     use dao::Conn;
-    use api::{auth};
+    use api::*;
     rocket::ignite()
       .attach(Conn::fairing())
       .mount("/", routes![index])
       .mount("/api/v1/", routes![auth::register])
+      .register(catchers![error::unprocessable_entity])
   }
 }
