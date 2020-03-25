@@ -1,10 +1,8 @@
-use super::APIResult;
+use crate::api::{APIResult, APIError};
 use crate::dao::{model::*, Conn};
 use diesel::{insert_into, prelude::*};
 use rocket::request::Form;
-use rocket_contrib::json::Json;
-use serde_json::json;
-use std::collections::HashMap;
+use rocket_contrib::json::JsonValue;
 use validator::Validate;
 
 #[derive(FromForm, Validate)]
@@ -19,14 +17,12 @@ pub struct RegisterForm {
 pub fn register(form: Form<RegisterForm>, conn: Conn) -> APIResult {
   use crate::dao::schema::users;
   use chrono::Local;
-  form
-    .validate()
-    .map_err(|e| response!(validate_error!(e), -2))?;
+  form.validate()?;
   let ret = users::table
     .filter(users::username.eq(&form.username))
     .first::<User>(&*conn);
   if ret.is_ok() {
-    return Err(response!("user existed", -2));
+    return Err(APIError::from("use existed!"));
   }
   let now = Local::now().naive_local();
   let user = insert_into(users::table)
@@ -36,8 +32,7 @@ pub fn register(form: Form<RegisterForm>, conn: Conn) -> APIResult {
       users::email.eq(&form.email),
       users::last_logined_at.eq(now),
     ))
-    .get_result::<User>(&*conn)
-    .map_err(|e| response!(e.to_string(), -1))?;
+    .get_result::<User>(&*conn)?;
 
   Ok(response!({
     "token":"123", "user": user
