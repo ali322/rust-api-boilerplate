@@ -1,40 +1,22 @@
-use crate::api::{APIResult, APIError};
+use crate::api::{APIResult, APIError, jwt::{generate_token, AuthToken}};
 use crate::dao::{model::*, Conn};
-use diesel::{insert_into, prelude::*};
-use rocket::request::Form;
-use rocket_contrib::json::JsonValue;
+use rocket::request::LenientForm;
 use validator::Validate;
 
-#[derive(FromForm, Validate)]
-pub struct RegisterForm {
-  username: String,
-  password: String,
-  #[validate(email)]
-  email: String,
-}
-
-#[post("/register", data = "<form>")]
-pub fn register(form: Form<RegisterForm>, conn: Conn) -> APIResult {
-  use crate::dao::schema::users;
-  use chrono::Local;
-  form.validate()?;
-  let ret = users::table
-    .filter(users::username.eq(&form.username))
-    .first::<User>(&*conn);
-  if ret.is_ok() {
+#[post("/register", data = "<new_user>")]
+pub fn register(new_user: LenientForm<NewUser>, conn: Conn) -> APIResult {
+  new_user.validate()?;
+  if !new_user.is_valid_username(&*conn) {
     return Err(APIError::from("use existed!"));
   }
-  let now = Local::now().naive_local();
-  let user = insert_into(users::table)
-    .values((
-      users::username.eq(&form.username),
-      users::password.eq(&form.password),
-      users::email.eq(&form.email),
-      users::last_logined_at.eq(now),
-    ))
-    .get_result::<User>(&*conn)?;
-
+  let user = new_user.create(&*conn)?;
   Ok(response!({
-    "token":"123", "user": user
+    "token": generate_token(user.clone()), "user": user
   }))
+}
+
+#[get("/test")]
+pub fn auth(token: AuthToken) -> APIResult {
+  println!("token: {:?}", token);
+  Ok(response!("ok"))
 }

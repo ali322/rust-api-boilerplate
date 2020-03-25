@@ -80,12 +80,13 @@ pub type APIResult = Result<JsonValue, APIError>;
 
 macro_rules! response {
   ($val:tt) => {
-    JsonValue::from(json!({
+    json!({
       "code": 0,
       "data" : $val
-    }))
+    }).into()
   };
 }
 
 pub mod auth;
 pub mod error;
+pub mod jwt;

@@ -12,6 +12,7 @@ extern crate validator;
 
 extern crate chrono;
 extern crate serde;
+extern crate jsonwebtoken;
 
 mod dao;
 mod api;
@@ -30,7 +31,7 @@ impl App {
     rocket::ignite()
       .attach(Conn::fairing())
       .mount("/", routes![index])
-      .mount("/api/v1/", routes![auth::register])
-      .register(catchers![error::unprocessable_entity])
+      .mount("/api/v1/", routes![auth::register, auth::auth])
+      .register(catchers![error::unprocessable_entity, error::unauthorized])
   }
 }
