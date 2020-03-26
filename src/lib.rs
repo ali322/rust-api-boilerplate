@@ -13,6 +13,7 @@ extern crate validator;
 extern crate chrono;
 extern crate jsonwebtoken;
 extern crate serde;
+extern crate uuid;
 
 mod api;
 mod dao;
@@ -40,8 +41,18 @@ impl App {
           auth::user,
           auth::update_user,
           auth::delete_user,
+          
+          rbac::domain::create_domain,
+          rbac::domain::update_domain,
+          rbac::domain::delete_domain,
+          rbac::domain::domain,
+          rbac::domain::domains,
         ],
       )
-      .register(catchers![error::unprocessable_entity, error::unauthorized])
+      .register(catchers![
+        error::unprocessable_entity,
+        error::unauthorized,
+        error::not_found
+      ])
   }
 }

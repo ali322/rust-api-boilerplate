@@ -1,9 +1,10 @@
 use crate::api::{
   jwt::{generate_token, AuthToken},
-  APIError, APIResult,
+  APIError, APIResult, UuidParam
 };
 use crate::dao::{model::user::*, Conn};
 use rocket::request::Form;
+use rocket_contrib::json::Json;
 use validator::Validate;
 
 #[post("/register", data = "<new_user>")]
@@ -40,26 +41,21 @@ pub fn users(page: Option<i64>, limit: Option<i64>, conn: Conn) -> APIResult {
 }
 
 #[get("/user/<id>")]
-pub fn user(id: i32, conn: Conn) -> APIResult {
-  let user = User::find_one(id, &*conn)?;
+pub fn user(id: UuidParam, conn: Conn) -> APIResult {
+  let user = User::find_one(&id.into_inner(), &*conn)?;
   Ok(response!(user))
 }
 
-#[put("/user/<id>", data = "<update_user>")]
-pub fn update_user(id: i32, update_user: Form<UpdateUser>, conn: Conn) -> APIResult {
+#[put("/user/<id>", format= "json", data = "<update_user>")]
+pub fn update_user(id: UuidParam, update_user: Json<UpdateUser>, conn: Conn) -> APIResult {
   update_user.validate()?;
-  let updated = update_user.save(id, &*conn)?;
+  let updated = update_user.save(&id.into_inner(), &*conn)?;
   Ok(response!(updated))
 }
 
 #[delete("/user/<id>")]
-pub fn delete_user(id: i32, conn: Conn) -> APIResult {
-  let count = User::delete_one(id, &*conn)?;
+pub fn delete_user(id: UuidParam, conn: Conn) -> APIResult {
+  let count = User::delete_one(&id.into_inner(), &*conn)?;
   Ok(response!(count))
 }
 
-#[get("/test")]
-pub fn auth(token: AuthToken) -> APIResult {
-  println!("token: {:?}", token);
-  Ok(response!("ok"))
-}

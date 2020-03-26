@@ -7,10 +7,11 @@ use diesel::{
 use rocket::{request::FromForm};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Queryable, Serialize, Deserialize)]
 pub struct User {
-  pub id: i32,
+  pub id: Uuid,
   pub username: String,
   pub password: String,
   pub email: String,
@@ -27,7 +28,7 @@ pub struct NewUser {
   pub email: String,
 }
 
-#[derive(Debug, FromForm, Validate, AsChangeset)]
+#[derive(Debug, Validate, AsChangeset, Serialize, Deserialize)]
 #[table_name = "users"]
 pub struct UpdateUser {
   #[validate(email)]
@@ -63,7 +64,7 @@ impl NewUser {
 }
 
 impl UpdateUser {
-  pub fn save(&self, id: i32, conn: &PgConnection) -> Result<User, DieselError> {
+  pub fn save(&self, id: &Uuid, conn: &PgConnection) -> Result<User, DieselError> {
     update(users::table.find(id)).set(self).get_result::<User>(conn)
   }
 }
@@ -90,10 +91,10 @@ impl User {
       .limit(limit)
       .load::<User>(conn)
   }
-  pub fn find_one(id: i32, conn: &PgConnection) -> Result<User, DieselError> {
+  pub fn find_one(id: &Uuid, conn: &PgConnection) -> Result<User, DieselError> {
     users::table.find(id).first::<User>(conn)
   }
-  pub fn delete_one(id: i32, conn: &PgConnection) -> Result<usize, DieselError> {
+  pub fn delete_one(id: &Uuid, conn: &PgConnection) -> Result<usize, DieselError> {
     delete(users::table.find(id)).execute(conn)
   }
 }

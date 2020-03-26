@@ -1,7 +1,7 @@
 use diesel::result::Error as DieselError;
 use rocket::{
-  http::{ContentType, Status},
-  request::Request,
+  http::{ContentType, Status, RawStr},
+  request::{Request, FromParam},
   response::{Responder, Response, Result as RocketResult},
 };
 use rocket_contrib::json::JsonValue;
@@ -9,6 +9,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, self};
 use std::collections::HashMap;
 use validator::{ValidationErrors};
+use uuid::{Uuid, parser::ParseError as UuidParseError};
 
 #[derive(Debug)]
 pub struct APIError {
@@ -87,6 +88,22 @@ macro_rules! response {
   };
 }
 
+pub struct UuidParam(Uuid);
+
+impl<'r> FromParam<'r> for UuidParam{
+  type Error = UuidParseError;
+  fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
+    Uuid::parse_str(param.as_str()).map(|v|UuidParam(v))
+  }
+}
+
+impl UuidParam {
+  pub fn into_inner(self) -> Uuid {
+    self.0
+  }
+}
+
 pub mod auth;
 pub mod error;
 pub mod jwt;
+pub mod rbac;
