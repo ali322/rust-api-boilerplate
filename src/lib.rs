@@ -11,11 +11,11 @@ extern crate validator_derive;
 extern crate validator;
 
 extern crate chrono;
-extern crate serde;
 extern crate jsonwebtoken;
+extern crate serde;
 
-mod dao;
 mod api;
+mod dao;
 
 pub struct App;
 
@@ -25,13 +25,23 @@ pub fn index() -> &'static str {
 }
 
 impl App {
-  pub fn new() -> rocket::Rocket{
-    use dao::Conn;
+  pub fn new() -> rocket::Rocket {
     use api::*;
+    use dao::Conn;
     rocket::ignite()
       .attach(Conn::fairing())
       .mount("/", routes![index])
-      .mount("/api/v1/", routes![auth::register, auth::auth])
+      .mount(
+        "/api/v1/",
+        routes![
+          auth::register,
+          auth::login,
+          auth::users,
+          auth::user,
+          auth::update_user,
+          auth::delete_user,
+        ],
+      )
       .register(catchers![error::unprocessable_entity, error::unauthorized])
   }
 }

@@ -2,7 +2,7 @@ use jsonwebtoken::{Header, encode, decode, TokenData, Validation, errors:: Resul
 use serde::{Serialize, Deserialize};
 use rocket::{http::Status, request::{FromRequest, Request, Outcome}, response::status};
 use rocket_contrib::json::JsonValue;
-use crate::dao::model::User;
+use crate::dao::model::user::User;
 use chrono::{Utc, Duration};
 use std::ops::Add;
 

@@ -15,6 +15,7 @@ serde_json = "1.0"
 validator = "0.10"
 validator_derive = "0.10"
 jsonwebtoken = "5"
+bcrypt = "0.6.2"
 
 [dependencies.rocket_contrib]
 version = "0.4.4"
