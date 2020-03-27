@@ -11,19 +11,29 @@ pub struct Domain {
   pub description: String,
 }
 
-#[derive(Debug, Validate, Insertable, Queryable, AsChangeset, Serialize, Deserialize)]
+#[derive(Debug, Validate, Insertable, Serialize, Deserialize)]
 #[table_name = "domains"]
-pub struct UpsetDomain {
+pub struct NewDomain {
   pub name: String,
   pub description: String,
 }
 
-impl UpsetDomain {
+#[derive(Debug, Validate, AsChangeset, Serialize, Deserialize)]
+#[table_name = "domains"]
+pub struct UpdateDomain {
+  pub name: Option<String>,
+  pub description: Option<String>,
+}
+
+impl NewDomain {
   pub fn create(&self, conn: &PgConnection) -> Result<Domain, DieselError> {
     insert_into(domains::table)
       .values(self)
       .get_result::<Domain>(conn)
   }
+}
+
+impl UpdateDomain{
   pub fn save(&self, id: i32, conn: &PgConnection) -> Result<Domain, DieselError> {
     update(domains::table.find(id)).set(self).get_result::<Domain>(conn)
   }

@@ -31,9 +31,8 @@ pub struct NewUser {
 #[derive(Debug, Validate, AsChangeset, Serialize, Deserialize)]
 #[table_name = "users"]
 pub struct UpdateUser {
-  #[validate(email)]
-  pub email: String,
-  pub avatar: String,
+  pub email: Option<String>,
+  pub avatar: Option<String>,
 }
 
 #[derive(FromForm, Queryable, Validate)]

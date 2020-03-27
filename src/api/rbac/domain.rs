@@ -3,17 +3,17 @@ use crate::api::{APIResult};
 use rocket_contrib::json::Json;
 use validator::Validate;
 
-#[post("/domain", data="<upset_domain>")]
-pub fn create_domain(upset_domain: Json<UpsetDomain>,conn: Conn) -> APIResult {
-  upset_domain.validate()?;
-  let domain = upset_domain.create(&*conn)?;
+#[post("/domain", data="<new>")]
+pub fn create_domain(new: Json<NewDomain>,conn: Conn) -> APIResult {
+  new.validate()?;
+  let domain = new.create(&*conn)?;
   Ok(response!(domain))
 }
 
-#[put("/domain/<id>", data="<upset_domain>")]
-pub fn update_domain(id: i32, upset_domain: Json<UpsetDomain>, conn: Conn) -> APIResult {
-  upset_domain.validate()?;
-  let domain = upset_domain.save(id, &*conn)?;
+#[put("/domain/<id>", data="<update>")]
+pub fn update_domain(id: i32, update: Json<UpdateDomain>, conn: Conn) -> APIResult {
+  update.validate()?;
+  let domain = update.save(id, &*conn)?;
   Ok(response!(domain))
 }
 
