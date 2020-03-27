@@ -20,34 +20,24 @@ mod dao;
 
 pub struct App;
 
-#[get("/")]
-pub fn index() -> &'static str {
-  "welcome to aid"
-}
-
 impl App {
   pub fn new() -> rocket::Rocket {
     use api::*;
     use dao::Conn;
     rocket::ignite()
       .attach(Conn::fairing())
-      .mount("/", routes![index])
       .mount(
         "/api/v1/",
-        routes![
-          auth::register,
-          auth::login,
-          auth::users,
-          auth::user,
-          auth::update_user,
-          auth::delete_user,
+        api::apply_routes()
+        // routes![
           
-          rbac::domain::create_domain,
-          rbac::domain::update_domain,
-          rbac::domain::delete_domain,
-          rbac::domain::domain,
-          rbac::domain::domains,
-        ],
+          
+        //   rbac::domain::create_domain,
+        //   rbac::domain::update_domain,
+        //   rbac::domain::delete_domain,
+        //   rbac::domain::domain,
+        //   rbac::domain::domains,
+        // ],
       )
       .register(catchers![
         error::unprocessable_entity,

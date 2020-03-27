@@ -1,5 +1,6 @@
 use diesel::result::Error as DieselError;
 use rocket::{
+  Route,
   http::{ContentType, Status, RawStr},
   request::{Request, FromParam},
   response::{Responder, Response, Result as RocketResult},
@@ -107,3 +108,10 @@ pub mod auth;
 pub mod error;
 pub mod jwt;
 pub mod rbac;
+
+pub fn apply_routes()-> Vec<Route> {
+  let mut routes:Vec<Route> = vec![];
+  routes.extend(auth::apply_routes().iter().cloned());
+  routes.extend(rbac::apply_routes().iter().cloned());
+  routes
+}

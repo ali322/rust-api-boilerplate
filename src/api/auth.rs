@@ -1,9 +1,9 @@
 use crate::api::{
   jwt::{generate_token, AuthToken},
-  APIError, APIResult, UuidParam
+  APIError, APIResult, UuidParam,
 };
 use crate::dao::{model::user::*, Conn};
-use rocket::request::Form;
+use rocket::{request::Form, Route};
 use rocket_contrib::json::Json;
 use validator::Validate;
 
@@ -46,7 +46,7 @@ pub fn user(id: UuidParam, conn: Conn) -> APIResult {
   Ok(response!(user))
 }
 
-#[put("/user/<id>", format= "json", data = "<update_user>")]
+#[put("/user/<id>", format = "json", data = "<update_user>")]
 pub fn update_user(id: UuidParam, update_user: Json<UpdateUser>, conn: Conn) -> APIResult {
   update_user.validate()?;
   let updated = update_user.save(&id.into_inner(), &*conn)?;
@@ -59,3 +59,6 @@ pub fn delete_user(id: UuidParam, conn: Conn) -> APIResult {
   Ok(response!(count))
 }
 
+pub fn apply_routes() -> Vec<Route> {
+  routes![register, login, users, user, update_user, delete_user,]
+}
