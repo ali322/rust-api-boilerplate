@@ -1,4 +1,7 @@
 -- This file should undo anything in `up.sql`
-DROP TABLE IF EXISTS domains CASCADE;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS users;
+DROP TABLE domains CASCADE;
+DROP TABLE roles;
+DROP TABLE users;
+DROP TABLE actions;
+DROP TABLE role_has_actions;
+DROP TABLE user_has_roles;

@@ -1,16 +1,16 @@
-use crate::dao::{Conn, model::rbac::action::*};
-use crate::api::{APIResult};
+use crate::api::APIResult;
+use crate::dao::{model::rbac::action::*, Conn};
 use rocket_contrib::json::Json;
 use validator::Validate;
 
-#[post("/action", data="<new>")]
-pub fn create_action(new: Json<NewAction>,conn: Conn) -> APIResult {
+#[post("/action", data = "<new>")]
+pub fn create_action(new: Json<NewAction>, conn: Conn) -> APIResult {
   new.validate()?;
   let action = new.create(&*conn)?;
   Ok(response!(action))
 }
 
-#[put("/action/<id>", data="<update>")]
+#[put("/action/<id>", data = "<update>")]
 pub fn update_action(id: i32, update: Json<UpdateAction>, conn: Conn) -> APIResult {
   update.validate()?;
   let action = update.save(id, &*conn)?;
@@ -24,13 +24,25 @@ pub fn delete_action(id: i32, conn: Conn) -> APIResult {
 }
 
 #[get("/action/<id>")]
-pub fn action(id: i32, conn: Conn) -> APIResult{
+pub fn action(id: i32, conn: Conn) -> APIResult {
   let action = Action::find_one(id, &*conn)?;
-  Ok(response!(action)) 
+  Ok(response!(action))
 }
 
 #[get("/action")]
 pub fn actions(conn: Conn) -> APIResult {
   let actions = Action::find_all(&*conn)?;
   Ok(response!(actions))
+}
+
+#[post("/grant/action", data = "<grant>")]
+pub fn grant_action(grant: Json<RoleHasActions>, conn: Conn) -> APIResult {
+  let role_has_actions = grant.create(&*conn)?;
+  Ok(response!(role_has_actions))
+}
+
+#[post("/revoke/action", data = "<revoke>")]
+pub fn revoke_action(revoke: Json<RoleHasActions>, conn: Conn) -> APIResult {
+  let count = revoke.delete_one(&*conn)?;
+  Ok(response!(count))
 }

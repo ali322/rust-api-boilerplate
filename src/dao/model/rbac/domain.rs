@@ -1,6 +1,8 @@
 use crate::dao::schema::domains;
 use diesel::Identifiable;
-use diesel::{insert_into, update, delete, prelude::*, result::Error as DieselError, Insertable, PgConnection};
+use diesel::{
+  delete, insert_into, prelude::*, result::Error as DieselError, update, Insertable, PgConnection,
+};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
@@ -11,18 +13,23 @@ pub struct Domain {
   pub description: String,
 }
 
+impl Domain {
+  pub fn delete_one(id: i32, conn: &PgConnection) -> Result<usize, DieselError> {
+    delete(domains::table.find(id)).execute(conn)
+  }
+  pub fn find_one(id: i32, conn: &PgConnection) -> Result<Domain, DieselError> {
+    domains::table.find(id).first::<Domain>(conn)
+  }
+  pub fn find_all(conn: &PgConnection) -> Result<Vec<Domain>, DieselError> {
+    domains::table.load::<Domain>(conn)
+  }
+}
+
 #[derive(Debug, Validate, Insertable, Serialize, Deserialize)]
 #[table_name = "domains"]
 pub struct NewDomain {
   pub name: String,
   pub description: String,
-}
-
-#[derive(Debug, Validate, AsChangeset, Serialize, Deserialize)]
-#[table_name = "domains"]
-pub struct UpdateDomain {
-  pub name: Option<String>,
-  pub description: Option<String>,
 }
 
 impl NewDomain {
@@ -33,20 +40,17 @@ impl NewDomain {
   }
 }
 
-impl UpdateDomain{
-  pub fn save(&self, id: i32, conn: &PgConnection) -> Result<Domain, DieselError> {
-    update(domains::table.find(id)).set(self).get_result::<Domain>(conn)
-  }
+#[derive(Debug, Validate, AsChangeset, Serialize, Deserialize)]
+#[table_name = "domains"]
+pub struct UpdateDomain {
+  pub name: Option<String>,
+  pub description: Option<String>,
 }
 
-impl Domain{
-  pub fn delete_one(id: i32, conn: &PgConnection) -> Result<usize, DieselError> {
-    delete(domains::table.find(id)).execute(conn)
-  }
-  pub fn find_one(id: i32, conn: &PgConnection) -> Result<Domain, DieselError> {
-    domains::table.find(id).first::<Domain>(conn)
-  }
-  pub fn find_all(conn: &PgConnection) -> Result<Vec<Domain>, DieselError> {
-    domains::table.load::<Domain>(conn)
+impl UpdateDomain {
+  pub fn save(&self, id: i32, conn: &PgConnection) -> Result<Domain, DieselError> {
+    update(domains::table.find(id))
+      .set(self)
+      .get_result::<Domain>(conn)
   }
 }

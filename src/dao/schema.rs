@@ -52,7 +52,11 @@ table! {
 }
 
 joinable!(actions -> domains (domain_id));
+joinable!(role_has_actions -> actions (action_id));
+joinable!(role_has_actions -> roles (role_id));
 joinable!(roles -> domains (domain_id));
+joinable!(user_has_roles -> roles (role_id));
+joinable!(user_has_roles -> users (user_id));
 
 allow_tables_to_appear_in_same_query!(
     actions,

@@ -33,14 +33,14 @@ CREATE TABLE actions(
 );
 
 CREATE TABLE user_has_roles(
-  user_id UUID,
-  role_id INTEGER,
+  user_id UUID REFERENCES users(id),
+  role_id INTEGER REFERENCES roles(id),
   expire TIMESTAMP NOT NULL,
   PRIMARY KEY(user_id, role_id)
 );
 
 CREATE TABLE role_has_actions(
-  role_id INTEGER,
-  action_id INTEGER,
+  role_id INTEGER REFERENCES roles(id),
+  action_id INTEGER REFERENCES actions(id),
   PRIMARY KEY(action_id, role_id)
 );
