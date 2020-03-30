@@ -79,16 +79,6 @@ impl From<&'static str> for APIError{
 
 pub type APIResult = Result<JsonValue, APIError>;
 
-
-macro_rules! response {
-  ($val:tt) => {
-    json!({
-      "code": 0,
-      "data" : $val
-    }).into()
-  };
-}
-
 pub struct UuidParam(Uuid);
 
 impl<'r> FromParam<'r> for UuidParam{
@@ -102,6 +92,15 @@ impl UuidParam {
   pub fn into_inner(self) -> Uuid {
     self.0
   }
+}
+
+macro_rules! response {
+  ($val:tt) => {
+    json!({
+      "code": 0,
+      "data" : $val
+    }).into()
+  };
 }
 
 pub mod auth;

@@ -23,3 +23,24 @@ CREATE TABLE roles(
   domain_id INTEGER NOT NULL,
   FOREIGN KEY(domain_id) REFERENCES domains(id)
 );
+
+CREATE TABLE actions(
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  description VARCHAR(200) NOT NULL,
+  domain_id INTEGER NOT NULL,
+  FOREIGN KEY(domain_id) REFERENCES domains(id)
+);
+
+CREATE TABLE user_has_roles(
+  user_id UUID,
+  role_id INTEGER,
+  expire TIMESTAMP NOT NULL,
+  PRIMARY KEY(user_id, role_id)
+);
+
+CREATE TABLE role_has_actions(
+  role_id INTEGER,
+  action_id INTEGER,
+  PRIMARY KEY(action_id, role_id)
+);

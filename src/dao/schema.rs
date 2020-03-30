@@ -1,8 +1,24 @@
 table! {
+    actions (id) {
+        id -> Int4,
+        name -> Varchar,
+        description -> Varchar,
+        domain_id -> Int4,
+    }
+}
+
+table! {
     domains (id) {
         id -> Int4,
         name -> Varchar,
         description -> Varchar,
+    }
+}
+
+table! {
+    role_has_actions (action_id, role_id) {
+        role_id -> Int4,
+        action_id -> Int4,
     }
 }
 
@@ -12,6 +28,14 @@ table! {
         name -> Varchar,
         description -> Varchar,
         domain_id -> Int4,
+    }
+}
+
+table! {
+    user_has_roles (user_id, role_id) {
+        user_id -> Uuid,
+        role_id -> Int4,
+        expire -> Timestamp,
     }
 }
 
@@ -27,10 +51,14 @@ table! {
     }
 }
 
+joinable!(actions -> domains (domain_id));
 joinable!(roles -> domains (domain_id));
 
 allow_tables_to_appear_in_same_query!(
+    actions,
     domains,
+    role_has_actions,
     roles,
+    user_has_roles,
     users,
 );
