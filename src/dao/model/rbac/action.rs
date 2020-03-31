@@ -24,6 +24,9 @@ impl Action {
   pub fn find_all(conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
     actions::table.load::<Action>(conn)
   }
+  pub fn find_all_by_name(names: Vec<String>, conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
+    actions::table.filter(actions::name.eq_any(names)).load::<Action>(conn)
+  }
 }
 
 #[derive(Debug, Validate, Insertable, Serialize, Deserialize)]
@@ -58,8 +61,9 @@ impl UpdateAction {
   }
 }
 
-#[derive(Debug, Insertable, Queryable, Validate, Serialize, Deserialize)]
+#[derive(Debug, Insertable, Associations, Queryable, Validate, Serialize, Deserialize)]
 #[table_name = "role_has_actions"]
+#[belongs_to(Action)]
 pub struct RoleHasActions {
   pub role_id: i32,
   pub action_id: i32,
@@ -78,5 +82,20 @@ impl RoleHasActions {
         .filter(role_has_actions::action_id.eq(self.action_id)),
     )
     .execute(conn)
+  }
+  pub fn find_one(
+    role_id: i32,
+    action_id: i32,
+    conn: &PgConnection,
+  ) -> Result<RoleHasActions, DieselError> {
+    role_has_actions::table
+      .filter(role_has_actions::role_id.eq(role_id))
+      .filter(role_has_actions::action_id.eq(action_id))
+      .first::<RoleHasActions>(conn)
+  }
+  pub fn find_all(role_id: i32, conn: &PgConnection) -> Result<Vec<RoleHasActions>, DieselError> {
+    role_has_actions::table
+      .filter(role_has_actions::role_id.eq(role_id))
+      .load::<RoleHasActions>(conn)
   }
 }

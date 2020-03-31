@@ -2,7 +2,7 @@ use diesel::result::Error as DieselError;
 use rocket::{
   Route,
   http::{ContentType, Status, RawStr},
-  request::{Request, FromParam},
+  request::{Request, FromParam, FromFormValue},
   response::{Responder, Response, Result as RocketResult},
 };
 use rocket_contrib::json::JsonValue;
@@ -85,6 +85,13 @@ impl<'r> FromParam<'r> for UuidParam{
   type Error = UuidParseError;
   fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
     Uuid::parse_str(param.as_str()).map(|v|UuidParam(v))
+  }
+}
+
+impl<'r> FromFormValue<'r> for UuidParam{
+  type Error = UuidParseError;
+  fn from_form_value(form_value: &'r RawStr) -> Result<Self, Self::Error> {
+    Uuid::parse_str(form_value.as_str()).map(|v|UuidParam(v))
   }
 }
 

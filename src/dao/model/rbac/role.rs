@@ -4,7 +4,7 @@ use diesel::Identifiable;
 use diesel::{
   delete, insert_into, prelude::*, result::Error as DieselError, update, Insertable, PgConnection,
 };
-use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
+use serde::{self, Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
@@ -71,7 +71,7 @@ pub struct UserHasRoles {
 
 mod date_format {
   use serde::{self, Deserialize, Serializer, Deserializer};
-  use chrono::{NaiveDateTime, TimeZone};
+  use chrono::{NaiveDateTime};
   const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
   pub fn serialize<S>(date: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -94,6 +94,10 @@ impl UserHasRoles {
     insert_into(user_has_roles::table)
       .values(self)
       .get_result::<UserHasRoles>(conn)
+  }
+  pub fn find_one(user_id: &Uuid, role_id: i32, conn: &PgConnection) -> Result<UserHasRoles, DieselError> {
+    user_has_roles::table.filter(user_has_roles::role_id.eq(role_id))
+    .filter(user_has_roles::user_id.eq(user_id)).first::<UserHasRoles>(conn)
   }
 }
 
