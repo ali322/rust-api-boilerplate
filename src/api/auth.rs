@@ -1,5 +1,5 @@
 use crate::api::{
-  jwt::{generate_token, AuthToken},
+  jwt::{generate_token},
   APIError, APIResult, UuidParam,
 };
 use crate::dao::{model::user::*, Conn};

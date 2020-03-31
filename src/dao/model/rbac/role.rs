@@ -1,14 +1,20 @@
-use crate::dao::schema::{roles, user_has_roles};
-use chrono::{prelude::*};
-use diesel::Identifiable;
+use crate::dao::{
+  model::rbac::domain::Domain,
+  schema::{roles, user_has_roles},
+};
+use chrono::prelude::*;
 use diesel::{
-  delete, insert_into, prelude::*, result::Error as DieselError, update, Insertable, PgConnection,
+  delete, insert_into, pg::Pg, prelude::*, result::Error as DieselError, update, Identifiable,
+  Insertable, PgConnection,
 };
 use serde::{self, Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Identifiable, Insertable, Queryable, Serialize, Deserialize)]
+#[derive(
+  Debug, PartialEq, Identifiable, Associations, Insertable, Queryable, Serialize, Deserialize,
+)]
+#[belongs_to(Domain)]
 pub struct Role {
   pub id: i32,
   pub name: String,
@@ -23,8 +29,12 @@ impl Role {
   pub fn find_one(id: i32, conn: &PgConnection) -> Result<Role, DieselError> {
     roles::table.find(id).first::<Role>(conn)
   }
-  pub fn find_all(conn: &PgConnection) -> Result<Vec<Role>, DieselError> {
-    roles::table.load::<Role>(conn)
+  pub fn find_all(domain_id: Option<i32>, conn: &PgConnection) -> Result<Vec<Role>, DieselError> {
+    let mut query: roles::BoxedQuery<Pg> = roles::table.into_boxed();
+    if let Some(x) = domain_id {
+      query = query.filter(roles::domain_id.eq(x));
+    }
+    query.load::<Role>(conn)
   }
 }
 
@@ -70,8 +80,8 @@ pub struct UserHasRoles {
 }
 
 mod date_format {
-  use serde::{self, Deserialize, Serializer, Deserializer};
-  use chrono::{NaiveDateTime};
+  use chrono::NaiveDateTime;
+  use serde::{self, Deserialize, Deserializer, Serializer};
   const FORMAT: &'static str = "%Y-%m-%d %H:%M:%S";
   pub fn serialize<S>(date: &NaiveDateTime, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -95,9 +105,20 @@ impl UserHasRoles {
       .values(self)
       .get_result::<UserHasRoles>(conn)
   }
-  pub fn find_one(user_id: &Uuid, role_id: i32, conn: &PgConnection) -> Result<UserHasRoles, DieselError> {
-    user_has_roles::table.filter(user_has_roles::role_id.eq(role_id))
-    .filter(user_has_roles::user_id.eq(user_id)).first::<UserHasRoles>(conn)
+  pub fn find_one(
+    user_id: &Uuid,
+    role_id: i32,
+    conn: &PgConnection,
+  ) -> Result<UserHasRoles, DieselError> {
+    user_has_roles::table
+      .filter(user_has_roles::role_id.eq(role_id))
+      .filter(user_has_roles::user_id.eq(user_id))
+      .first::<UserHasRoles>(conn)
+  }
+  pub fn find_all(user_id: &Uuid, conn: &PgConnection) -> Result<Vec<UserHasRoles>, DieselError> {
+    user_has_roles::table
+      .filter(user_has_roles::user_id.eq(user_id))
+      .load::<UserHasRoles>(conn)
   }
 }
 

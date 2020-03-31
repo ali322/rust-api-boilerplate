@@ -1,12 +1,17 @@
-use crate::dao::schema::{actions, role_has_actions};
+use crate::dao::{
+  model::rbac::domain::Domain,
+  schema::{actions, role_has_actions},
+};
 use diesel::Identifiable;
 use diesel::{
-  delete, insert_into, prelude::*, result::Error as DieselError, update, Insertable, PgConnection,
+  delete, insert_into, pg::Pg, prelude::*, result::Error as DieselError, update, Insertable,
+  PgConnection,
 };
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Debug, Identifiable, Insertable, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Identifiable, Insertable, Associations, Queryable, Serialize, Deserialize)]
+#[belongs_to(Domain)]
 pub struct Action {
   pub id: i32,
   pub name: String,
@@ -21,11 +26,20 @@ impl Action {
   pub fn find_one(id: i32, conn: &PgConnection) -> Result<Action, DieselError> {
     actions::table.find(id).first::<Action>(conn)
   }
-  pub fn find_all(conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
-    actions::table.load::<Action>(conn)
+  pub fn find_all(domain_id: Option<i32>, conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
+    let mut query: actions::BoxedQuery<Pg> = actions::table.into_boxed();
+    if let Some(x) = domain_id {
+      query = query.filter(actions::domain_id.eq(x));
+    }
+    query.load::<Action>(conn)
   }
-  pub fn find_all_by_name(names: Vec<String>, conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
-    actions::table.filter(actions::name.eq_any(names)).load::<Action>(conn)
+  pub fn find_all_by_name(
+    names: Vec<String>,
+    conn: &PgConnection,
+  ) -> Result<Vec<Action>, DieselError> {
+    actions::table
+      .filter(actions::name.eq_any(names))
+      .load::<Action>(conn)
   }
 }
 

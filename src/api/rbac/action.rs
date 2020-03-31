@@ -31,7 +31,7 @@ pub fn action(id: i32, conn: Conn) -> APIResult {
 
 #[get("/action")]
 pub fn actions(conn: Conn) -> APIResult {
-  let actions = Action::find_all(&*conn)?;
+  let actions = Action::find_all(None, &*conn)?;
   Ok(response!(actions))
 }
 

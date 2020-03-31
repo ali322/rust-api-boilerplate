@@ -1,7 +1,7 @@
 pub mod action;
 pub mod domain;
 pub mod role;
-pub mod access;
+pub mod rbac;
 
 use rocket::Route;
 
@@ -26,6 +26,8 @@ pub fn apply_routes() -> Vec<Route> {
     action::actions,
     action::grant_action,
     action::revoke_action,
-    access::access,
+    rbac::user_access,
+    rbac::user_roles,
+    rbac::role_actions,
   ]
 }

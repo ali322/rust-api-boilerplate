@@ -22,7 +22,6 @@ impl<'a, 'r> FromRequest<'a, 'r> for AuthToken{
       let auth_str = auth_header.to_string();
       if auth_str.starts_with("Bearer") {
         let token = auth_str[6..auth_str.len()].trim();
-        println!("{}", token);
         let ret = decode_token(token.to_string());
         if let Ok(token_data) = ret {
           return Outcome::Success(token_data.claims);

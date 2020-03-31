@@ -31,7 +31,7 @@ pub fn role(id: i32, conn: Conn) -> APIResult {
 
 #[get("/role")]
 pub fn roles(conn: Conn) -> APIResult {
-  let roles = Role::find_all(&*conn)?;
+  let roles = Role::find_all(None, &*conn)?;
   Ok(response!(roles))
 }
 

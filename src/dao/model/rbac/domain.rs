@@ -6,7 +6,7 @@ use diesel::{
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Debug, Identifiable, Insertable, Queryable, Serialize, Deserialize)]
+#[derive(Debug, Identifiable, Insertable, PartialEq, Queryable, Serialize, Deserialize)]
 pub struct Domain {
   pub id: i32,
   pub name: String,
