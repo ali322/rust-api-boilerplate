@@ -17,6 +17,7 @@ extern crate uuid;
 
 mod api;
 mod dao;
+mod fairing;
 
 pub struct App;
 
@@ -32,6 +33,7 @@ impl App {
         "/api/v1/",
         apply_routes()
       )
+      .attach(fairing::RequestTimer)
       .attach(AdHoc::on_attach("JWT Key", |rocket| {
         let key = rocket.config().get_str("jwt_key").unwrap().to_string();
         Ok(rocket.manage(Conf{ jwt_key: key}))
