@@ -20,25 +20,22 @@ mod dao;
 
 pub struct App;
 
+use rocket::{ Rocket, fairing::AdHoc};
+
 impl App {
-  pub fn new() -> rocket::Rocket {
+  pub fn new() -> Rocket {
     use api::*;
     use dao::Conn;
     rocket::ignite()
       .attach(Conn::fairing())
       .mount(
         "/api/v1/",
-        api::apply_routes()
-        // routes![
-          
-          
-        //   rbac::domain::create_domain,
-        //   rbac::domain::update_domain,
-        //   rbac::domain::delete_domain,
-        //   rbac::domain::domain,
-        //   rbac::domain::domains,
-        // ],
+        apply_routes()
       )
+      .attach(AdHoc::on_attach("JWT Key", |rocket| {
+        let key = rocket.config().get_str("jwt_key").unwrap().to_string();
+        Ok(rocket.manage(Conf{ jwt_key: key}))
+      }))
       .register(catchers![
         error::unprocessable_entity,
         error::unauthorized,

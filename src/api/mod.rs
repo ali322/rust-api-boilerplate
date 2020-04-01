@@ -110,6 +110,11 @@ macro_rules! response {
   };
 }
 
+#[derive(Debug)]
+pub struct Conf{
+  pub jwt_key: String,
+}
+
 pub mod auth;
 pub mod error;
 pub mod jwt;
