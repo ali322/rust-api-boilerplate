@@ -1,5 +1,5 @@
 use crate::dao::schema::users;
-use bcrypt::{hash, verify, DEFAULT_COST};
+use bcrypt::{hash, verify};
 use chrono::{prelude::*, Local};
 use diesel::{
   delete, insert_into, prelude::*, result::Error as DieselError, update, PgConnection, Queryable,
@@ -55,7 +55,7 @@ impl NewUser {
   }
   pub fn create(&self, conn: &PgConnection) -> Result<User, DieselError> {
     let now = Local::now().naive_local();
-    let hash_password = hash(&self.password, DEFAULT_COST).unwrap();
+    let hash_password = hash(&self.password, 4).unwrap();
     insert_into(users::table)
       .values((
         users::username.eq(&self.username),
