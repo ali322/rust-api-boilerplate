@@ -4,5 +4,5 @@ pub mod schema;
 
 use rocket_contrib::databases::diesel;
 
-#[database("aid")]
+#[database("main")]
 pub struct Conn(diesel::PgConnection);

@@ -14,6 +14,8 @@ extern crate chrono;
 extern crate jsonwebtoken;
 extern crate serde;
 extern crate uuid;
+extern crate multipart;
+extern crate base64;
 
 mod api;
 mod dao;
@@ -36,7 +38,8 @@ impl App {
       .attach(fairing::RequestTimer)
       .attach(AdHoc::on_attach("JWT Key", |rocket| {
         let key = rocket.config().get_str("jwt_key").unwrap().to_string();
-        Ok(rocket.manage(Conf{ jwt_key: key}))
+        let upload = rocket.config().get_str("upload").unwrap().to_string();
+        Ok(rocket.manage(Conf{ jwt_key: key, upload: upload}))
       }))
       .register(catchers![
         error::unprocessable_entity,

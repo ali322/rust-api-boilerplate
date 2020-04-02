@@ -77,6 +77,12 @@ impl From<&'static str> for APIError{
   }
 }
 
+impl From<String> for APIError{
+  fn from(e: String) -> Self {
+    APIError{code: -1, message: json!(e)}
+  }
+}
+
 pub type APIResult = Result<JsonValue, APIError>;
 
 pub struct UuidParam(Uuid);
@@ -113,16 +119,19 @@ macro_rules! response {
 #[derive(Debug)]
 pub struct Conf{
   pub jwt_key: String,
+  pub upload: String,
 }
 
 pub mod auth;
 pub mod error;
 pub mod jwt;
 pub mod rbac;
+pub mod upload;
 
 pub fn apply_routes()-> Vec<Route> {
   let mut routes:Vec<Route> = vec![];
   routes.extend(auth::apply_routes().iter().cloned());
   routes.extend(rbac::apply_routes().iter().cloned());
+  routes.extend(upload::apply_routes().iter().cloned());
   routes
 }

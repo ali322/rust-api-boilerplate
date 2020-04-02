@@ -1,4 +1,5 @@
 [global]
 port = 1234
 jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
-databases = {aid = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
+upload = "/Users/alichen/Workspace"
+databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
