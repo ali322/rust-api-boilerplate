@@ -10,6 +10,7 @@ use std::{
   env, fs,
   io::{Cursor, Read, Write},
   path::Path,
+  time::SystemTime,
 };
 
 #[derive(Debug)]
@@ -26,9 +27,24 @@ pub struct FilePart {
 }
 
 impl FilePart {
-  pub fn save(&self, p: &Path) {
-    let s = Path::join(p, &self.filename);
-    fs::copy(Path::new(&self.path), &s).unwrap();
+  fn normalize_name(filename: &str) -> String {
+    let ext_name = Path::new(filename).extension().unwrap();
+    let now = SystemTime::now()
+      .duration_since(SystemTime::UNIX_EPOCH)
+      .unwrap()
+      .as_millis();
+    Path::new(filename)
+      .with_file_name(base64::encode(filename.to_string() + &now.to_string()))
+      .with_extension(ext_name)
+      .to_str()
+      .unwrap()
+      .to_string()
+  }
+  pub fn save(&self, p: &Path) -> Result<(String, String), String> {
+    let filename = FilePart::normalize_name(&self.filename);
+    let s = Path::join(p, &filename);
+    fs::copy(Path::new(&self.path), &s).map_err(|_| "copy to dest path failed".to_string())?;
+    Ok((self.filename.clone(), filename))
   }
 }
 
