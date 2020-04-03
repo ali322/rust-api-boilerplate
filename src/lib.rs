@@ -10,12 +10,12 @@ extern crate diesel;
 extern crate validator_derive;
 extern crate validator;
 
+extern crate base64;
 extern crate chrono;
 extern crate jsonwebtoken;
+extern crate multipart;
 extern crate serde;
 extern crate uuid;
-extern crate multipart;
-extern crate base64;
 
 mod api;
 mod dao;
@@ -23,7 +23,7 @@ mod fairing;
 
 pub struct App;
 
-use rocket::{ Rocket, fairing::AdHoc};
+use rocket::{fairing::AdHoc, Rocket};
 
 impl App {
   pub fn new() -> Rocket {
@@ -31,15 +31,23 @@ impl App {
     use dao::Conn;
     rocket::ignite()
       .attach(Conn::fairing())
-      .mount(
-        "/api/v1/",
-        apply_routes()
-      )
+      .mount("/api/v1/", apply_routes())
       .attach(fairing::RequestTimer)
       .attach(AdHoc::on_attach("JWT Key", |rocket| {
         let key = rocket.config().get_str("jwt_key").unwrap().to_string();
-        let upload = rocket.config().get_str("upload").unwrap().to_string();
-        Ok(rocket.manage(Conf{ jwt_key: key, upload: upload}))
+        let upload_dir = rocket.config().get_str("upload_dir").unwrap().to_string();
+        let upload_allowed_extension = rocket
+          .config()
+          .get_str("upload_allowed_extension")
+          .unwrap()
+          .to_string();
+        let upload_size_limit = rocket.config().get_int("upload_size_limit").unwrap() as u64;
+        Ok(rocket.manage(Conf {
+          jwt_key: key,
+          upload_dir,
+          upload_size_limit,
+          upload_allowed_extension,
+        }))
       }))
       .register(catchers![
         error::unprocessable_entity,

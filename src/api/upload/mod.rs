@@ -1,9 +1,9 @@
-// mod upload;
-mod simple;
 pub mod multipart;
+mod upload;
 
-use rocket::Route;
+use rocket::{http::Method::*, Route};
 
 pub fn apply_routes() -> Vec<Route> {
-  routes![simple::upload]
+  let upload = Route::new(Post, "/upload", upload::upload);
+  vec![upload]
 }

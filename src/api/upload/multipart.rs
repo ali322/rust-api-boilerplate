@@ -1,11 +1,5 @@
 use multipart::server::Multipart;
-use rocket::{
-  data::{self, FromDataSimple},
-  http::Status,
-  Data, Outcome,
-  Outcome::*,
-  Request,
-};
+use rocket::Data;
 use std::{
   env, fs,
   io::{Cursor, Read, Write},
@@ -54,110 +48,115 @@ impl Drop for FilePart {
   }
 }
 
-#[derive(Debug)]
-pub struct MultipartData {
-  pub texts: Vec<TextPart>,
+pub struct MultipartParts {
   pub files: Vec<FilePart>,
+  pub texts: Vec<TextPart>,
 }
 
-impl<'a> FromDataSimple for MultipartData {
-  type Error = String;
-  fn from_data(request: &Request, data: Data) -> data::Outcome<Self, String> {
-    let content_type = request
-      .headers()
-      .get_one("Content-Type")
-      .expect("no content-type");
-    let idx = content_type.find("boundary=").expect("no boundary");
-    let boundary = &content_type[(idx + "boundary=".len())..];
-    let mut d = Vec::new();
-    data.stream_to(&mut d).expect("unable to read");
+pub fn handle_multipart(
+  content_type: &str,
+  data: Data,
+  file_size_limit: u64,
+  file_type: &str,
+) -> Result<MultipartParts, String> {
+  let idx = content_type.find("boundary=").expect("no boundary");
+  let boundary = &content_type[(idx + "boundary=".len())..];
+  let mut d = Vec::new();
+  data.stream_to(&mut d).expect("unable to read");
 
-    let mut multipart = Multipart::with_body(Cursor::new(d), boundary);
-    let mut texts = Vec::new();
-    let mut files = Vec::new();
-    let mut buffer = [0u8; 4096];
-    let mut err_out: Option<Outcome<_, (Status, _), _>> = None;
-    let tmp_dir = env::temp_dir();
+  let mut multipart = Multipart::with_body(Cursor::new(d), boundary);
+  let mut texts = Vec::new();
+  let mut files = Vec::new();
+  let mut buffer = [0u8; 4096];
+  let mut err_out: Option<String> = None;
+  let tmp_dir = env::temp_dir();
 
-    multipart
-      .foreach_entry(|entry| {
-        let mut data = entry.data;
-        if entry.headers.filename == None {
-          let mut text_buf = Vec::new();
-          loop {
-            let c = match data.read(&mut buffer) {
-              Ok(c) => c,
-              Err(err) => {
-                err_out = Some(Failure((Status::UnprocessableEntity, format!("{:?}", err))));
-                return;
-              }
-            };
-            if c == 0 {
-              break;
-            }
-            text_buf.extend_from_slice(&buffer[..c]);
-          }
-          let text = match String::from_utf8(text_buf) {
-            Ok(s) => s,
-            Err(_) => {
-              err_out = Some(Failure((
-                Status::UnprocessableEntity,
-                "data can not read as UTF-8".into(),
-              )));
-              return;
-            }
-          };
-          texts.push(TextPart {
-            key: entry.headers.name.to_string(),
-            value: text,
-          });
-        } else {
-          let filename = entry.headers.filename.clone().unwrap();
-          let target_path = Path::join(&tmp_dir, &filename);
-          let mut file = match fs::File::create(&target_path) {
-            Ok(f) => f,
+  multipart
+    .foreach_entry(|entry| {
+      let mut data = entry.data;
+      if entry.headers.filename == None {
+        let mut text_buf = Vec::new();
+        loop {
+          let c = match data.read(&mut buffer) {
+            Ok(c) => c,
             Err(err) => {
-              err_out = Some(Failure((Status::InternalServerError, format!("{:?}", err))));
+              err_out = Some(format!("{:?}", err));
               return;
             }
           };
-          let mut _sum_c = 0u64;
-          loop {
-            let c = match data.read(&mut buffer) {
-              Ok(c) => c,
-              Err(err) => {
-                try_delete(&target_path);
-                err_out = Some(Failure((Status::UnprocessableEntity, format!("{:?}", err))));
-                return;
-              }
-            };
-            if c == 0 {
-              break;
+          if c == 0 {
+            break;
+          }
+          text_buf.extend_from_slice(&buffer[..c]);
+        }
+        let text = match String::from_utf8(text_buf) {
+          Ok(s) => s,
+          Err(_) => {
+            err_out = Some("data can not read as UTF-8".to_string());
+            return;
+          }
+        };
+        texts.push(TextPart {
+          key: entry.headers.name.to_string(),
+          value: text,
+        });
+      } else {
+        let filename = entry.headers.filename.clone().unwrap();
+        let ext_name = Path::new(&filename).extension().unwrap();
+        let allowed_file_type: Vec<&str> = file_type.split(",").collect();
+        println!("{:?}", allowed_file_type);
+        if allowed_file_type.contains(&ext_name.to_str().unwrap().trim_start_matches(".")) == false {
+          err_out = Some(format!("file {} has unacceptable type", &filename));
+          return;
+        }
+        let target_path = Path::join(&tmp_dir, &filename);
+        let mut file = match fs::File::create(&target_path) {
+          Ok(f) => f,
+          Err(err) => {
+            err_out = Some(format!("{:?}", err));
+            return;
+          }
+        };
+        let mut sum_c = 0u64;
+        loop {
+          let c = match data.read(&mut buffer) {
+            Ok(c) => c,
+            Err(err) => {
+              try_delete(&target_path);
+              err_out = Some(format!("{:?}", err));
+              return;
             }
-            _sum_c += c as u64;
-            match file.write(&buffer[..c]) {
-              Ok(_) => (),
-              Err(err) => {
-                try_delete(&target_path);
-                err_out = Some(Failure((Status::InternalServerError, format!("{:?}", err))));
-                return;
-              }
+          };
+          if c == 0 {
+            break;
+          }
+          sum_c += c as u64;
+          if sum_c > file_size_limit {
+            try_delete(&target_path);
+            err_out = Some(format!("file {} is too large", &filename));
+            return;
+          }
+          match file.write(&buffer[..c]) {
+            Ok(_) => (),
+            Err(err) => {
+              try_delete(&target_path);
+              err_out = Some(format!("{:?}", err));
+              return;
             }
           }
-          files.push(FilePart {
-            name: entry.headers.name.to_string(),
-            path: String::from(tmp_dir.to_str().unwrap()) + &filename,
-            filename: entry.headers.filename.clone().unwrap(),
-          })
         }
-      })
-      .unwrap();
-    if let Some(failed) = err_out {
-      return failed;
-    } else {
-      return Outcome::Success(MultipartData { texts, files });
-    }
+        files.push(FilePart {
+          name: entry.headers.name.to_string(),
+          path: String::from(tmp_dir.to_str().unwrap()) + &filename,
+          filename: entry.headers.filename.clone().unwrap(),
+        })
+      }
+    })
+    .unwrap();
+  if let Some(failed) = err_out {
+    return Err(failed);
   }
+  Ok(MultipartParts { texts, files })
 }
 
 #[inline]
