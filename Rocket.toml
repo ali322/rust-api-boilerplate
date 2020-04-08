@@ -2,6 +2,6 @@
 port = 1234
 jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
 upload_dir = "/Users/alichen/Workspace/upload"
-upload_size_limit = 1048576 # 1mb
-upload_allowed_extension = "jpg,jpeg,png,gif,webp"
+upload_size_limit = 1048576 # 1024 * 1024 1mb
+upload_allowed_extension = "jpg,jpeg,png,gif,webp,md"
 databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
