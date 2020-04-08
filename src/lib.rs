@@ -16,6 +16,7 @@ extern crate jsonwebtoken;
 extern crate multipart;
 extern crate serde;
 extern crate uuid;
+extern crate image;
 
 mod api;
 mod dao;
