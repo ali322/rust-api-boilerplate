@@ -29,9 +29,9 @@ pub fn action(id: i32, conn: Conn) -> APIResult {
   Ok(response!(action))
 }
 
-#[get("/action")]
-pub fn actions(conn: Conn) -> APIResult {
-  let actions = Action::find_all(None, &*conn)?;
+#[get("/action?<domain_id>")]
+pub fn actions(domain_id: Option<i32>, conn: Conn) -> APIResult {
+  let actions = Action::find_all(domain_id, &*conn)?;
   Ok(response!(actions))
 }
 

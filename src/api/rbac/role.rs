@@ -29,9 +29,9 @@ pub fn role(id: i32, conn: Conn) -> APIResult {
   Ok(response!(role))
 }
 
-#[get("/role")]
-pub fn roles(conn: Conn) -> APIResult {
-  let roles = Role::find_all(None, &*conn)?;
+#[get("/role?<domain_id>")]
+pub fn roles(domain_id: Option<i32>, conn: Conn) -> APIResult {
+  let roles = Role::find_all(domain_id, &*conn)?;
   Ok(response!(roles))
 }
 
