@@ -1,5 +1,6 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
+extern crate openssl;
 #[macro_use]
 extern crate rocket;
 #[macro_use]
@@ -12,11 +13,11 @@ extern crate validator;
 
 extern crate base64;
 extern crate chrono;
+extern crate image;
 extern crate jsonwebtoken;
 extern crate multipart;
 extern crate serde;
 extern crate uuid;
-extern crate image;
 
 mod api;
 mod dao;

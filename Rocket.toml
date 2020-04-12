@@ -1,7 +1,16 @@
-[global]
+[development]
 port = 1234
 jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
-upload_dir = "/path/to/upload"
+upload_dir = "/Users/alichen/Workspace/upload/aid"
 upload_size_limit = 1048576 # 1024 * 1024 1mb
 upload_allowed_extension = "jpg,jpeg,png,gif,webp,md"
-databases = {main = { url = "postgres://postgres:postgres@127.0.0.1:5438/aid"}}
+databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
+
+[production]
+port = 1234
+secret_key = "cthH4hkyv5plVKQmpxxLo72ieIDq0jrmjUAd1GaR3FQ="
+jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
+upload_dir = "/aifs01/upload/aid"
+upload_size_limit = 1048576 # 1024 * 1024 1mb
+upload_allowed_extension = "jpg,jpeg,png,gif,webp,md"
+databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
