@@ -1,7 +1,4 @@
-use crate::api::{
-  jwt::{generate_token}, Conf,
-  APIError, APIResult, UuidParam,
-};
+use crate::api::{jwt::generate_token, APIError, APIResult, Conf, UuidParam};
 use crate::dao::{model::user::*, Conn};
 use rocket::{request::Form, Route, State};
 use rocket_contrib::json::Json;
@@ -10,8 +7,8 @@ use validator::Validate;
 #[post("/register", data = "<new_user>")]
 pub fn register(new_user: Form<NewUser>, conf: State<Conf>, conn: Conn) -> APIResult {
   new_user.validate()?;
-  if new_user.is_valid_username(&*conn) {
-    return Err(APIError::from("use existed!"));
+  if new_user.exists(&*conn).is_ok() {
+    return Err(APIError::from("use existed"));
   }
   let user = new_user.create(&*conn)?;
   Ok(response!({

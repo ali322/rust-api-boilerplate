@@ -44,14 +44,14 @@ pub struct NewUser {
   pub password: String,
   #[validate(email)]
   pub email: String,
+  pub memo: Option<String>,
 }
 
 impl NewUser {
-  pub fn is_valid_username(&self, conn: &PgConnection) -> bool {
+  pub fn exists(&self, conn: &PgConnection) -> Result<User, DieselError> {
     users::table
       .filter(users::username.eq(&self.username))
       .first::<User>(conn)
-      .is_ok()
   }
   pub fn create(&self, conn: &PgConnection) -> Result<User, DieselError> {
     let now = Local::now().naive_local();
@@ -62,6 +62,7 @@ impl NewUser {
         users::password.eq(hash_password),
         users::email.eq(&self.email),
         users::last_logined_at.eq(now),
+        users::memo.eq(&self.memo),
       ))
       .get_result::<User>(conn)
   }

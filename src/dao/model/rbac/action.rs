@@ -33,12 +33,9 @@ impl Action {
     }
     query.load::<Action>(conn)
   }
-  pub fn find_all_by_name(
-    names: Vec<String>,
-    conn: &PgConnection,
-  ) -> Result<Vec<Action>, DieselError> {
+  pub fn find_all_by_ids(ids: Vec<i32>, conn: &PgConnection) -> Result<Vec<Action>, DieselError> {
     actions::table
-      .filter(actions::name.eq_any(names))
+      .filter(actions::id.eq_any(ids))
       .load::<Action>(conn)
   }
 }

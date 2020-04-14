@@ -16,6 +16,8 @@ extern crate chrono;
 extern crate image;
 extern crate jsonwebtoken;
 extern crate multipart;
+extern crate reqwest;
+extern crate rocket_cors;
 extern crate serde;
 extern crate uuid;
 
@@ -31,9 +33,13 @@ impl App {
   pub fn new() -> Rocket {
     use api::*;
     use dao::Conn;
+
+    let cors = rocket_cors::CorsOptions::default().to_cors().unwrap();
+
     rocket::ignite()
       .attach(Conn::fairing())
       .mount("/api/v1/", apply_routes())
+      .attach(cors)
       .attach(fairing::RequestTimer)
       .attach(AdHoc::on_attach("JWT Key", |rocket| {
         let key = rocket.config().get_str("jwt_key").unwrap().to_string();

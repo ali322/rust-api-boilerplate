@@ -1,16 +1,16 @@
 use diesel::result::Error as DieselError;
 use rocket::{
-  Route,
-  http::{ContentType, Status, RawStr},
-  request::{Request, FromParam, FromFormValue},
+  http::{ContentType, RawStr, Status},
+  request::{FromFormValue, FromParam, Request},
   response::{Responder, Response, Result as RocketResult},
+  Route,
 };
 use rocket_contrib::json::JsonValue;
-use std::error::Error;
-use std::fmt::{Display, Formatter, self};
 use std::collections::HashMap;
-use validator::{ValidationErrors};
-use uuid::{Uuid, parser::ParseError as UuidParseError};
+use std::error::Error;
+use std::fmt::{self, Display, Formatter};
+use uuid::{parser::ParseError as UuidParseError, Uuid};
+use validator::ValidationErrors;
 
 #[derive(Debug)]
 pub struct APIError {
@@ -18,7 +18,7 @@ pub struct APIError {
   message: JsonValue,
 }
 
-impl Display for APIError{
+impl Display for APIError {
   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
     f.write_str(&format!("{:?}", self))
   }
@@ -47,9 +47,10 @@ impl From<DieselError> for APIError {
   }
 }
 
-impl From<ValidationErrors> for APIError{
+impl From<ValidationErrors> for APIError {
   fn from(e: ValidationErrors) -> Self {
-    let errors = e.field_errors()
+    let errors = e
+      .field_errors()
       .iter()
       .map(|(k, v)| {
         let errors: Vec<String> = v
@@ -64,22 +65,28 @@ impl From<ValidationErrors> for APIError{
         (*k, errors)
       })
       .collect::<HashMap<_, _>>();
-      APIError {
-        code: -1,
-        message: json!(errors),
-      }
+    APIError {
+      code: -1,
+      message: json!(errors),
+    }
   }
 }
 
-impl From<&'static str> for APIError{
+impl From<&'static str> for APIError {
   fn from(e: &'static str) -> Self {
-    APIError{code: -1, message: json!(e)}
+    APIError {
+      code: -1,
+      message: json!(e),
+    }
   }
 }
 
-impl From<String> for APIError{
+impl From<String> for APIError {
   fn from(e: String) -> Self {
-    APIError{code: -1, message: json!(e)}
+    APIError {
+      code: -1,
+      message: json!(e),
+    }
   }
 }
 
@@ -87,17 +94,17 @@ pub type APIResult = Result<JsonValue, APIError>;
 
 pub struct UuidParam(Uuid);
 
-impl<'r> FromParam<'r> for UuidParam{
+impl<'r> FromParam<'r> for UuidParam {
   type Error = UuidParseError;
   fn from_param(param: &'r RawStr) -> Result<Self, Self::Error> {
-    Uuid::parse_str(param.as_str()).map(|v|UuidParam(v))
+    Uuid::parse_str(param.as_str()).map(|v| UuidParam(v))
   }
 }
 
-impl<'r> FromFormValue<'r> for UuidParam{
+impl<'r> FromFormValue<'r> for UuidParam {
   type Error = UuidParseError;
   fn from_form_value(form_value: &'r RawStr) -> Result<Self, Self::Error> {
-    Uuid::parse_str(form_value.as_str()).map(|v|UuidParam(v))
+    Uuid::parse_str(form_value.as_str()).map(|v| UuidParam(v))
   }
 }
 
@@ -117,7 +124,7 @@ macro_rules! response {
 }
 
 #[derive(Debug)]
-pub struct Conf{
+pub struct Conf {
   pub jwt_key: String,
   pub upload_dir: String,
   pub upload_size_limit: u64,
@@ -127,12 +134,14 @@ pub struct Conf{
 pub mod auth;
 pub mod error;
 pub mod jwt;
+pub mod nt;
 pub mod rbac;
 pub mod upload;
 
-pub fn apply_routes()-> Vec<Route> {
-  let mut routes:Vec<Route> = vec![];
+pub fn apply_routes() -> Vec<Route> {
+  let mut routes: Vec<Route> = vec![];
   routes.extend(auth::apply_routes().iter().cloned());
+  routes.extend(nt::apply_routes().iter().cloned());
   routes.extend(rbac::apply_routes().iter().cloned());
   routes.extend(upload::apply_routes().iter().cloned());
   routes

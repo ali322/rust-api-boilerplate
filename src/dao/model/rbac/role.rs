@@ -36,6 +36,18 @@ impl Role {
     }
     query.load::<Role>(conn)
   }
+  pub fn find_all_by_ids(
+    domain_id: Option<i32>,
+    ids: Vec<i32>,
+    conn: &PgConnection,
+  ) -> Result<Vec<Role>, DieselError> {
+    let mut query: roles::BoxedQuery<Pg> = roles::table.into_boxed();
+    query = query.filter(roles::id.eq_any(ids));
+    if let Some(x) = domain_id {
+      query = query.filter(roles::domain_id.eq(x));
+    }
+    query.load::<Role>(conn)
+  }
 }
 
 #[derive(Debug, Validate, Insertable, Serialize, Deserialize)]

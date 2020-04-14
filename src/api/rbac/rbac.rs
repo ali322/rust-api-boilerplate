@@ -5,14 +5,21 @@ use crate::dao::{
 };
 use std::collections::HashMap;
 
-#[get("/access?<user_id>&<role_id>&<action_name>")]
-pub fn user_access(user_id: UuidParam, role_id: i32, action_name: String, conn: Conn) -> APIResult {
-  let action_names: Vec<String> = action_name
+#[get("/access?<user_id>&<role_id>&<action_id>")]
+pub fn user_access(user_id: UuidParam, role_id: i32, action_id: String, conn: Conn) -> APIResult {
+  let action_ids: Vec<String> = action_id
     .as_str()
     .split(",")
     .map(|e| e.to_string())
     .collect();
-  let actions = Action::find_all_by_name(action_names, &*conn)?;
+  let mut parsed_action_ids: Vec<i32> = Vec::new();
+  for action_id in action_ids.into_iter() {
+    let parsed_action_id = action_id
+      .parse::<i32>()
+      .map_err(|_| "action_id is invalid")?;
+    parsed_action_ids.push(parsed_action_id);
+  }
+  let actions = Action::find_all_by_ids(parsed_action_ids, &*conn)?;
   let role_has_actions = RoleHasActions::find_all(role_id, &*conn)?;
   let mut permissions: HashMap<String, bool> = HashMap::new();
   for action in actions {
@@ -32,32 +39,23 @@ pub fn user_access(user_id: UuidParam, role_id: i32, action_name: String, conn: 
 }
 
 #[get("/user/role?<user_id>&<domain_id>")]
-pub fn user_roles(
-  user_id: UuidParam,
-  domain_id: i32,
-  _token: AuthToken,
-  conn: Conn,
-) -> APIResult {
+pub fn user_roles(user_id: UuidParam, domain_id: i32, _token: AuthToken, conn: Conn) -> APIResult {
   let user_has_roles = UserHasRoles::find_all(&user_id.into_inner(), &*conn)?;
-  let role_ids = user_has_roles.iter().map(|e| e.role_id).collect::<Vec<i32>>();
-  let mut roles = Role::find_all(Some(domain_id), &*conn)?;
-  roles = roles
-    .into_iter()
-    .filter(|e| role_ids.contains(&e.id))
-    .collect();
+  let role_ids = user_has_roles
+    .iter()
+    .map(|e| e.role_id)
+    .collect::<Vec<i32>>();
+  let roles = Role::find_all_by_ids(Some(domain_id), role_ids, &*conn)?;
   Ok(response!(roles))
 }
 
-#[get("/role/action?<role_id>&<domain_id>")]
-pub fn role_actions(
-  role_id: i32,
-  domain_id: i32,
-  _token: AuthToken,
-  conn: Conn,
- ) -> APIResult {
+#[get("/role/action?<role_id>")]
+pub fn role_actions(role_id: i32, _token: AuthToken, conn: Conn) -> APIResult {
   let role_has_actions = RoleHasActions::find_all(role_id, &*conn)?;
-  let action_ids = role_has_actions.iter().map(|e| e.action_id).collect::<Vec<i32>>();
-  let mut actions = Action::find_all(Some(domain_id), &*conn)?;
-  actions = actions.into_iter().filter(|e|action_ids.contains(&e.id)).collect();
+  let action_ids = role_has_actions
+    .iter()
+    .map(|e| e.action_id)
+    .collect::<Vec<i32>>();
+  let mut actions = Action::find_all_by_ids(action_ids, &*conn)?;
   Ok(response!(actions))
 }
