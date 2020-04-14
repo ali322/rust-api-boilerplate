@@ -6,7 +6,13 @@ use crate::dao::{
 use std::collections::HashMap;
 
 #[get("/access?<user_id>&<role_id>&<action_id>")]
-pub fn user_access(user_id: UuidParam, role_id: i32, action_id: String, conn: Conn) -> APIResult {
+pub fn user_access(
+  user_id: UuidParam,
+  role_id: i32,
+  action_id: String,
+  _token: AuthToken,
+  conn: Conn,
+) -> APIResult {
   let action_ids: Vec<String> = action_id
     .as_str()
     .split(",")
@@ -56,6 +62,6 @@ pub fn role_actions(role_id: i32, _token: AuthToken, conn: Conn) -> APIResult {
     .iter()
     .map(|e| e.action_id)
     .collect::<Vec<i32>>();
-  let mut actions = Action::find_all_by_ids(action_ids, &*conn)?;
+  let actions = Action::find_all_by_ids(action_ids, &*conn)?;
   Ok(response!(actions))
 }

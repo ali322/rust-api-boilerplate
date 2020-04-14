@@ -126,6 +126,7 @@ macro_rules! response {
 #[derive(Debug)]
 pub struct Conf {
   pub jwt_key: String,
+  pub upload_base_url: String,
   pub upload_dir: String,
   pub upload_size_limit: u64,
   pub upload_allowed_extension: String,

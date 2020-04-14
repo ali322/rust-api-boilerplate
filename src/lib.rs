@@ -43,6 +43,11 @@ impl App {
       .attach(fairing::RequestTimer)
       .attach(AdHoc::on_attach("JWT Key", |rocket| {
         let key = rocket.config().get_str("jwt_key").unwrap().to_string();
+        let upload_base_url = rocket
+          .config()
+          .get_str("upload_base_url")
+          .unwrap()
+          .to_string();
         let upload_dir = rocket.config().get_str("upload_dir").unwrap().to_string();
         let upload_allowed_extension = rocket
           .config()
@@ -52,6 +57,7 @@ impl App {
         let upload_size_limit = rocket.config().get_int("upload_size_limit").unwrap() as u64;
         Ok(rocket.manage(Conf {
           jwt_key: key,
+          upload_base_url,
           upload_dir,
           upload_size_limit,
           upload_allowed_extension,

@@ -11,12 +11,20 @@ use rocket::{
 use rocket_contrib::json::JsonValue;
 use serde::{Deserialize, Serialize};
 use std::ops::Add;
+use uuid::Uuid;
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Payload {
+  pub id: Uuid,
+  pub username: String,
+  pub email: String,
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthToken {
   pub iat: i64,
   pub exp: i64,
-  pub user: User,
+  pub payload: Payload,
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for AuthToken {
@@ -36,10 +44,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for AuthToken {
     }
     Outcome::Failure((
       Status::Unauthorized,
-      status::Custom(
-        Status::BadRequest,
-        json!("auth token invalid").into()
-      )
+      status::Custom(Status::BadRequest, json!("auth token invalid").into()),
     ))
   }
 }
@@ -49,7 +54,11 @@ pub fn generate_token<'r>(user: User, key: &str) -> String {
   let payload = AuthToken {
     iat: now.timestamp(),
     exp: now.add(Duration::days(30)).timestamp(),
-    user: user,
+    payload: Payload {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    },
   };
   encode(&Header::default(), &payload, key.as_ref()).unwrap()
 }
