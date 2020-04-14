@@ -104,7 +104,8 @@ pub fn handle_multipart(
         let filename = entry.headers.filename.clone().unwrap();
         let ext_name = Path::new(&filename).extension().unwrap();
         let allowed_file_type: Vec<&str> = file_type.split(",").collect();
-        if allowed_file_type.contains(&ext_name.to_str().unwrap().trim_start_matches(".")) == false {
+        if allowed_file_type.contains(&ext_name.to_str().unwrap().trim_start_matches(".")) == false
+        {
           err_out = Some(format!("file {} has unacceptable type", &filename));
           return;
         }
@@ -146,7 +147,7 @@ pub fn handle_multipart(
         }
         files.push(FilePart {
           name: entry.headers.name.to_string(),
-          path: String::from(tmp_dir.to_str().unwrap()) + &filename,
+          path: target_path.to_str().unwrap().to_string(),
           filename: entry.headers.filename.clone().unwrap(),
         })
       }
