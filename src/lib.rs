@@ -27,14 +27,26 @@ mod fairing;
 
 pub struct App;
 
-use rocket::{fairing::AdHoc, Rocket};
+use rocket::{fairing::AdHoc, http::Method, Rocket};
+use rocket_cors::{AllowedHeaders, AllowedOrigins};
 
 impl App {
   pub fn new() -> Rocket {
     use api::*;
     use dao::Conn;
 
-    let cors = rocket_cors::CorsOptions::default().to_cors().unwrap();
+    let cors = rocket_cors::CorsOptions {
+      allowed_origins: AllowedOrigins::All,
+      allowed_methods: vec![Method::Get, Method::Post, Method::Put, Method::Delete]
+        .into_iter()
+        .map(From::from)
+        .collect(),
+      allowed_headers: AllowedHeaders::All,
+      allow_credentials: true,
+      ..Default::default()
+    }
+    .to_cors()
+    .unwrap();
 
     rocket::ignite()
       .attach(Conn::fairing())
