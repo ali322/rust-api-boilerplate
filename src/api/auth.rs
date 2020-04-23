@@ -1,11 +1,11 @@
 use crate::api::{jwt::generate_token, APIError, APIResult, Conf, UuidParam};
 use crate::dao::{model::user::*, Conn};
-use rocket::{request::Form, Route, State};
+use rocket::{Route, State};
 use rocket_contrib::json::Json;
 use validator::Validate;
 
 #[post("/register", data = "<new_user>")]
-pub fn register(new_user: Form<NewUser>, conf: State<Conf>, conn: Conn) -> APIResult {
+pub fn register(new_user: Json<NewUser>, conf: State<Conf>, conn: Conn) -> APIResult {
   new_user.validate()?;
   if new_user.exists(&*conn).is_ok() {
     return Err(APIError::from("use existed"));
@@ -17,7 +17,7 @@ pub fn register(new_user: Form<NewUser>, conf: State<Conf>, conn: Conn) -> APIRe
 }
 
 #[post("/login", data = "<login_user>")]
-pub fn login(login_user: Form<LoginUser>, conf: State<Conf>, conn: Conn) -> APIResult {
+pub fn login(login_user: Json<LoginUser>, conf: State<Conf>, conn: Conn) -> APIResult {
   login_user.validate()?;
   let user = login_user.find_one(&*conn)?;
   if !login_user.is_password_matched(&user.password) {

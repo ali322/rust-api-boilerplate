@@ -4,7 +4,6 @@ use chrono::{prelude::*, Local};
 use diesel::{
   delete, insert_into, prelude::*, result::Error as DieselError, update, PgConnection, Queryable,
 };
-use rocket::request::FromForm;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use validator::Validate;
@@ -38,7 +37,7 @@ impl User {
   }
 }
 
-#[derive(FromForm, Validate)]
+#[derive(Serialize, Deserialize, Validate)]
 pub struct NewUser {
   pub username: String,
   pub password: String,
@@ -83,7 +82,7 @@ impl UpdateUser {
   }
 }
 
-#[derive(FromForm, Queryable, Validate)]
+#[derive(Serialize, Deserialize, Queryable, Validate)]
 pub struct LoginUser {
   pub username_or_email: String,
   pub password: String,
