@@ -3,9 +3,10 @@ port = 1234
 jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
 upload_base_url = "http://localhost:8080/upload"
 upload_dir = "/Users/alichen/Workspace/upload/"
-upload_size_limit = 1048576 # 1024 * 1024 1mb
+upload_size_limit = 1048576000 # 1024 * 1024 * 1000 1000mb
 upload_allowed_extension = "jpg,jpeg,png,gif,webp,md"
 databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}
+limits = {forms = 1048576000}
 
 [production]
 port = 1234
@@ -13,6 +14,7 @@ secret_key = "cthH4hkyv5plVKQmpxxLo72ieIDq0jrmjUAd1GaR3FQ="
 jwt_key = "n5LXiLeQ0UqaVwOSySIARzraSebDviRL1nLrNCWG1HM="
 upload_base_url = "http://10.19.14.155/upload/aid"
 upload_dir = "/aifs01/upload/aid"
-upload_size_limit = 1048576 # 1024 * 1024 1mb
+upload_size_limit = 1048576000 # 1024 * 1024 * 1000 1000mb
+limits = {forms = 1048576000}
 upload_allowed_extension = "jpg,jpeg,png,gif,webp,md,html,glb,gltf,bin,json,b3dm,geojson"
 databases = {main = { url = "postgres://postgres:uxtpostgres@127.0.0.1:5438/aid"}}

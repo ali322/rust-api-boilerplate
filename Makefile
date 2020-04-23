@@ -1,4 +1,4 @@
-MUSL_BUILDER=docker run --rm -it -v "$(shell pwd)":/home/rust/src -v cargo-git:/home/rust/.cargo/git -v cargo-registry:/home/rust/.cargo/registry alichen/rust-musl-builder:latest
+MUSL_BUILDER=docker run --rm -it -v "$(shell pwd)":/home/rust/src -v cargo-git:/home/rust/.cargo/git -v cargo-registry:/home/rust/.cargo/registry alichen/rust-musl-builder:0.0.1
 
 install:
 	@$(MUSL_BUILDER) sudo chown -R rust:rust /home/rust/.cargo/git /home/rust/.cargo/registry
