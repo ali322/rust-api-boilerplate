@@ -6,6 +6,7 @@ use std::{
   path::Path,
   time::SystemTime,
 };
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct TextPart {
@@ -13,11 +14,12 @@ pub struct TextPart {
   pub value: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FilePart {
-  pub name: String,
   pub path: String,
   pub filename: String,
+  pub extname: String,
+  pub size: u64,
 }
 
 impl FilePart {
@@ -34,17 +36,22 @@ impl FilePart {
       .unwrap()
       .to_string()
   }
-  pub fn save(&self, p: &Path) -> Result<(String, String), String> {
+  pub fn save(self, p: &Path) -> Result<(String, FilePart), String> {
     let filename = FilePart::normalize_name(&self.filename);
     let s = Path::join(p, &filename);
-    fs::copy(Path::new(&self.path), &s).map_err(|_| "copy to dest path failed".to_string())?;
-    Ok((self.filename.clone(), filename))
+    fs::copy(Path::new(&self.path), &s).map_err(|e| e.to_string())?;
+    let mut file_part = self.clone();
+    file_part.filename = filename;
+    Ok((self.filename.clone(),file_part))
   }
 }
 
 impl Drop for FilePart {
   fn drop(&mut self) {
-    fs::remove_file(Path::new(&self.path)).unwrap();
+    let path = Path::new(&self.path);
+    if path.is_file() {
+      fs::remove_file(path).unwrap();
+    }
   }
 }
 
@@ -146,9 +153,10 @@ pub fn handle_multipart(
           }
         }
         files.push(FilePart {
-          name: entry.headers.name.to_string(),
           path: target_path.to_str().unwrap().to_string(),
           filename: entry.headers.filename.clone().unwrap(),
+          extname: ext_name.to_str().unwrap().to_string(),
+          size: sum_c,
         })
       }
     })

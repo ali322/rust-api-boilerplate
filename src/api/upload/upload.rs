@@ -1,4 +1,4 @@
-use super::multipart::handle_multipart;
+use super::multipart::{handle_multipart, FilePart};
 use crate::api::{APIError, Conf};
 use crate::dao::{model::rbac::domain::*, Conn};
 use rocket::{handler::Outcome, request::Request, Data, State};
@@ -34,13 +34,15 @@ pub fn upload<'r>(req: &'r Request, data: Data) -> Outcome<'r> {
     &conf.upload_allowed_extension,
   ) {
     Ok(multiparts) => {
-      let mut files: HashMap<String, String> = HashMap::new();
+      let mut files: HashMap<String, FilePart> = HashMap::new();
       for f in multiparts.files {
         match f.save(&Path::new(&conf.upload_dir).join(&domain_name)) {
-          Ok((file_name, dest_name)) => {
+          Ok((file_name, file_part)) => {
+            let mut dest_file = file_part.clone();
+            dest_file.path = format!("{}/{}/{}", conf.upload_base_url, domain_name, dest_file.filename);
             files.insert(
               file_name,
-              format!("{}/{}/{}", conf.upload_base_url, domain_name, dest_name),
+              dest_file,
             );
           }
           Err(e) => {
