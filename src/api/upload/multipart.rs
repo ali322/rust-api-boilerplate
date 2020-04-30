@@ -38,6 +38,9 @@ impl FilePart {
   }
   pub fn save(self, p: &Path) -> Result<(String, FilePart), String> {
     let filename = FilePart::normalize_name(&self.filename);
+    if !p.is_dir() {
+      fs::create_dir_all(p).map_err(|e| e.to_string())?;
+    }
     let s = Path::join(p, &filename);
     fs::copy(Path::new(&self.path), &s).map_err(|e| e.to_string())?;
     let mut file_part = self.clone();

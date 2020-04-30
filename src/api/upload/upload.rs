@@ -3,6 +3,7 @@ use crate::api::{APIError, Conf};
 use crate::dao::{model::rbac::domain::*, Conn};
 use rocket::{handler::Outcome, request::Request, Data, State};
 use rocket_contrib::json::JsonValue;
+use chrono::prelude::*;
 use std::{collections::HashMap, path::Path};
 
 pub fn upload<'r>(req: &'r Request, data: Data) -> Outcome<'r> {
@@ -27,6 +28,7 @@ pub fn upload<'r>(req: &'r Request, data: Data) -> Outcome<'r> {
     .headers()
     .get_one("Content-Type")
     .expect("no content-type");
+  let now = Utc::now().format("%Y-%m-%d").to_string();
   match handle_multipart(
     content_type,
     data,
@@ -36,10 +38,10 @@ pub fn upload<'r>(req: &'r Request, data: Data) -> Outcome<'r> {
     Ok(multiparts) => {
       let mut files: HashMap<String, FilePart> = HashMap::new();
       for f in multiparts.files {
-        match f.save(&Path::new(&conf.upload_dir).join(&domain_name)) {
+        match f.save(&Path::new(&conf.upload_dir).join(&domain_name).join(&now)) {
           Ok((file_name, file_part)) => {
             let mut dest_file = file_part.clone();
-            dest_file.path = format!("{}/{}/{}", conf.upload_base_url, domain_name, dest_file.filename);
+            dest_file.path = format!("{}/{}/{}/{}", conf.upload_base_url, domain_name, now, dest_file.filename);
             files.insert(
               file_name,
               dest_file,
