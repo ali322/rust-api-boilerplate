@@ -33,8 +33,8 @@ pub fn connected(connect: Json<Connect>, conf: State<Conf>, conn: Conn) -> APIRe
     .send()
     .map_err(|e| e.to_string())?;
   let body: Value = from_str(&ret.text_with_charset("utf-8").unwrap()).unwrap();
-  if !body["error"].is_null() {
-    return Err(APIError::from(body["error_description"].to_string()));
+  if !body["error"].is_null() && body["error_description"].is_string() {
+    return Err(APIError::from(body["error_description"].as_str().unwrap().to_string()));
   }
   let access_token = body["access_token"].as_str().unwrap();
   url = format!("{}/api/v1.0.0/account/employee/getCurrentStaff", SSO_HOST);
@@ -44,8 +44,8 @@ pub fn connected(connect: Json<Connect>, conf: State<Conf>, conn: Conn) -> APIRe
     .send()
     .map_err(|e| e.to_string())?;
   let body = from_str::<Value>(&ret.text_with_charset("utf-8").unwrap()).unwrap();
-  if !body["error"].is_null() {
-    return Err(APIError::from(body["error_description"].to_string()));
+  if !body["error"].is_null() && body["error_description"].is_string() {
+    return Err(APIError::from(body["error_description"].as_str().unwrap().to_string()));
   }
   let username = body["staffInfo"]["username"].as_str().unwrap();
   let email = body["staffInfo"]["email"].as_str().unwrap();

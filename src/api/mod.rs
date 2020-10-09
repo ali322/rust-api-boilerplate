@@ -1,40 +1,42 @@
 use diesel::result::Error as DieselError;
 use rocket::{
-  http::{ContentType, RawStr, Status},
+  http::{RawStr},
   request::{FromFormValue, FromParam, Request},
-  response::{Responder, Response, Result as RocketResult},
+  response::{Responder, Result as RocketResult},
   Route,
 };
 use rocket_contrib::json::JsonValue;
 use std::collections::HashMap;
-use std::error::Error;
-use std::fmt::{self, Display, Formatter};
+use thiserror::Error;
+// use std::error::Error;
+// use std::fmt::{self, Display, Formatter};
 use uuid::{parser::ParseError as UuidParseError, Uuid};
 use validator::ValidationErrors;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error("{:?}", self)]
 pub struct APIError {
+  message: String,
   code: i8,
-  message: JsonValue,
 }
 
-impl Display for APIError {
-  fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-    f.write_str(&format!("{:?}", self))
-  }
-}
+// impl Display for APIError {
+//   fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+//     f.write_str(&self.message)
+//   }
+// }
 
-impl Error for APIError {}
+// impl Error for APIError {}
 
 impl<'r> Responder<'r> for APIError {
-  fn respond_to(self, _: &Request) -> RocketResult<'r> {
-    use std::io::Cursor;
-    let body = json!({"code": self.code, "message": self.message}).to_string();
-    Response::build()
-      .status(Status::Ok)
-      .header(ContentType::new("application", "json"))
-      .sized_body(Cursor::new(body))
-      .ok()
+  fn respond_to(self, req: &Request) -> RocketResult<'r> {
+    let body: JsonValue = json!({"code": self.code, "message": self.message.as_str()}).into();
+    body.respond_to(req)
+    // Response::build()
+    //   .status(Status::Ok)
+    //   .header(ContentType::new("application", "json"))
+    //   .sized_body(Cursor::new(body))
+    //   .ok()
   }
 }
 
@@ -42,7 +44,7 @@ impl From<DieselError> for APIError {
   fn from(e: DieselError) -> Self {
     APIError {
       code: -2,
-      message: json!(e.to_string()),
+      message: e.to_string(),
     }
   }
 }
@@ -67,7 +69,7 @@ impl From<ValidationErrors> for APIError {
       .collect::<HashMap<_, _>>();
     APIError {
       code: -1,
-      message: json!(errors),
+      message: format!("{:?}", errors),
     }
   }
 }
@@ -76,7 +78,7 @@ impl From<&'static str> for APIError {
   fn from(e: &'static str) -> Self {
     APIError {
       code: -1,
-      message: json!(e),
+      message: e.to_string(),
     }
   }
 }
@@ -85,7 +87,7 @@ impl From<String> for APIError {
   fn from(e: String) -> Self {
     APIError {
       code: -1,
-      message: json!(e),
+      message: e,
     }
   }
 }
