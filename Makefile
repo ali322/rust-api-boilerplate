@@ -6,4 +6,7 @@ install:
 build:
 	@$(MUSL_BUILDER) cargo build --release
 
-.PHONY: install build
+upload:
+	@scp -P 22022 -C target/x86_64-unknown-linux-musl/release/aid aidapi@10.19.14.155:/home/aidapi/aid
+
+.PHONY: install build upload
