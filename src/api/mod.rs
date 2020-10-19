@@ -1,6 +1,6 @@
 use diesel::result::Error as DieselError;
 use rocket::{
-  http::{RawStr},
+  http::RawStr,
   request::{FromFormValue, FromParam, Request},
   response::{Responder, Result as RocketResult},
   Route,
@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 // use std::error::Error;
 // use std::fmt::{self, Display, Formatter};
-use uuid::{parser::ParseError as UuidParseError, Uuid};
+use uuid::{Error as UuidParseError, Uuid};
 use validator::ValidationErrors;
 
 #[derive(Debug, Error)]
