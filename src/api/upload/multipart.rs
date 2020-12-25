@@ -30,7 +30,7 @@ impl FilePart {
       .unwrap()
       .as_millis();
     Path::new(filename)
-      .with_file_name(base64::encode(filename.to_string() + &now.to_string()))
+      .with_file_name(base64::encode_config(filename.to_string() + &now.to_string(), base64::URL_SAFE))
       .with_extension(ext_name)
       .to_str()
       .unwrap()
