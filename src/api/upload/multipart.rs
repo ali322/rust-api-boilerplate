@@ -112,7 +112,13 @@ pub fn handle_multipart(
         });
       } else {
         let filename = entry.headers.filename.clone().unwrap();
-        let ext_name = Path::new(&filename).extension().unwrap();
+        let ext_name = match Path::new(&filename).extension() {
+          Some(ext) => ext,
+          None => {
+            err_out = Some(format!("file {} has invalid extension name", &filename));
+            return;
+          }
+        };
         let allowed_file_type: Vec<&str> = file_type.split(",").collect();
         if allowed_file_type.contains(&ext_name.to_str().unwrap().trim_start_matches(".")) == false
         {
