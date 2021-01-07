@@ -1,12 +1,12 @@
 use multipart::server::Multipart;
 use rocket::Data;
+use serde::{Deserialize, Serialize};
 use std::{
   env, fs,
   io::{Cursor, Read, Write},
   path::Path,
   time::SystemTime,
 };
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 pub struct TextPart {
@@ -23,29 +23,35 @@ pub struct FilePart {
 }
 
 impl FilePart {
-  fn normalize_name(filename: &str) -> String {
-    let ext_name = Path::new(filename).extension().unwrap();
+  fn normalize_name(&self) -> String {
     let now = SystemTime::now()
       .duration_since(SystemTime::UNIX_EPOCH)
       .unwrap()
       .as_millis();
-    Path::new(filename)
-      .with_file_name(base64::encode_config(filename.to_string() + &now.to_string(), base64::URL_SAFE))
-      .with_extension(ext_name)
+    let filename = self.filename.clone();
+    let extname = self.extname.clone();
+    Path::new(&filename)
+      .with_file_name(base64::encode_config(
+        filename.to_string() + &now.to_string(),
+        base64::URL_SAFE,
+      ))
+      .with_extension(&extname)
       .to_str()
       .unwrap()
       .to_string()
   }
   pub fn save(self, p: &Path) -> Result<(String, FilePart), String> {
-    let filename = FilePart::normalize_name(&self.filename);
+    let origin_name = self.filename.clone();
+    let origin_path = self.path.clone();
+    let filename = self.normalize_name();
     if !p.is_dir() {
       fs::create_dir_all(p).map_err(|e| e.to_string())?;
     }
     let s = Path::join(p, &filename);
-    fs::copy(Path::new(&self.path), &s).map_err(|e| e.to_string())?;
+    fs::copy(Path::new(&origin_path), &s).map_err(|e| e.to_string())?;
     let mut file_part = self.clone();
     file_part.filename = filename;
-    Ok((self.filename.clone(),file_part))
+    Ok((origin_name, file_part))
   }
 }
 
@@ -113,14 +119,16 @@ pub fn handle_multipart(
       } else {
         let filename = entry.headers.filename.clone().unwrap();
         let ext_name = match Path::new(&filename).extension() {
-          Some(ext) => ext,
+          Some(ext) => ext.to_str().unwrap().to_lowercase(),
           None => {
             err_out = Some(format!("file {} has invalid extension name", &filename));
             return;
           }
         };
         let allowed_file_type: Vec<&str> = file_type.split(",").collect();
-        if allowed_file_type.contains(&ext_name.to_str().unwrap().trim_start_matches(".")) == false
+        if allowed_file_type.contains(
+          &ext_name.trim_start_matches(".")
+        ) == false
         {
           err_out = Some(format!("file {} has unacceptable type", &filename));
           return;
@@ -164,7 +172,7 @@ pub fn handle_multipart(
         files.push(FilePart {
           path: target_path.to_str().unwrap().to_string(),
           filename: entry.headers.filename.clone().unwrap(),
-          extname: ext_name.to_str().unwrap().to_string(),
+          extname: ext_name.to_string(),
           size: sum_c,
         })
       }
