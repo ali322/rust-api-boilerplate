@@ -42,6 +42,7 @@ pub fn upload<'r>(req: &'r Request, data: Data) -> Outcome<'r> {
           Ok((file_name, file_part)) => {
             let mut dest_file = file_part.clone();
             dest_file.path = format!("{}/{}/{}/{}", conf.upload_base_url, domain_name, now, dest_file.filename);
+            dest_file.basename = Some(format!("{}/{}/{}", domain_name, now, dest_file.filename));
             files.insert(
               file_name,
               dest_file,

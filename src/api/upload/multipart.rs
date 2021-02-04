@@ -18,6 +18,7 @@ pub struct TextPart {
 pub struct FilePart {
   pub path: String,
   pub filename: String,
+  pub basename: Option<String>,
   pub extname: String,
   pub size: u64,
 }
@@ -172,6 +173,7 @@ pub fn handle_multipart(
         files.push(FilePart {
           path: target_path.to_str().unwrap().to_string(),
           filename: entry.headers.filename.clone().unwrap(),
+          basename: None,
           extname: ext_name.to_string(),
           size: sum_c,
         })
